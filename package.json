@@ -1,0 +1,14 @@
+{
+  "name": "RzipJS",
+  "version": "1.0.0",
+  "description": "JS implementation of RetroArch's RZIP",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "pako": "^2.0.3"
+  },
+  "author": "bleach86",
+  "license": "GPL-3.0-or-later"
+}
