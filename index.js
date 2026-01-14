@@ -117,6 +117,12 @@ class RzipJS {
       inflated_offset += decompressed_chunk.length;
     }
 
+    if (inflated_data.length !== this.header.inflated_size) {
+      throw new Error(
+        "Decompressed size does not match expected inflated size"
+      );
+    }
+
     this.rfile = inflated_data;
     this.header.is_rzip_compressed = false;
 
