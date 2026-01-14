@@ -17,12 +17,14 @@ class RzipHeader {
 }
 
 class RzipJS {
+  // rfile: Uint8Array
   constructor(rfile) {
     this.pako = pako;
     this.rfile = Uint8Array.from(rfile);
     this.header = this.read_header(this.rfile);
   }
 
+  // Reads the RZIP header from the given rfile Uint8Array
   read_header(rfile) {
     const header_bytes = rfile.slice(0, 20);
 
@@ -34,6 +36,7 @@ class RzipJS {
       return new RzipHeader(rfile.length, RZIP_DEFAULT_CHUNK_SIZE, false);
     }
 
+    // Read chunk size (4 bytes, little-endian)
     const chunk_size =
       (header_bytes[8] |
         (header_bytes[9] << 8) |
@@ -45,6 +48,7 @@ class RzipJS {
       throw new Error("Invalid RZIP chunk size");
     }
 
+    // Read inflated size (8 bytes, little-endian)
     const inflated_size =
       (header_bytes[12] |
         (header_bytes[13] << 8) |
@@ -62,10 +66,12 @@ class RzipJS {
     return new RzipHeader(inflated_size, chunk_size, true);
   }
 
+  // Returns true if the rfile is RZIP compressed
   is_rzip_compressed() {
     return this.header.is_rzip_compressed;
   }
 
+  // Decompresses the RZIP compressed rfile
   rzip_inflate() {
     if (!this.is_rzip_compressed()) {
       return this.rfile;
@@ -117,6 +123,7 @@ class RzipJS {
     return inflated_data;
   }
 
+  // Compresses the rfile using RZIP compression
   rzip_deflate() {
     if (this.is_rzip_compressed()) {
       return this.rfile;
@@ -128,11 +135,13 @@ class RzipJS {
     const header = new Uint8Array(RZIP_HEADER_SIZE);
     header.set(RZIP_MAGIC, 0);
 
+    // Chunk size, 4 bytes, little-endian
     header[8] = this.header.chunk_size & 0xff;
     header[9] = (this.header.chunk_size >> 8) & 0xff;
     header[10] = (this.header.chunk_size >> 16) & 0xff;
     header[11] = (this.header.chunk_size >> 24) & 0xff;
 
+    // Inflated size, 8 bytes, little-endian
     const inflated_size = this.rfile.length;
     header[12] = inflated_size & 0xff;
     header[13] = (inflated_size >> 8) & 0xff;
