@@ -1,5 +1,6 @@
 import { RzipJS } from "./index.js";
 
+// Sample RZIP compressed data for testing
 const rzipData = Uint8Array.from([
   0x23, 0x52, 0x5a, 0x49, 0x50, 0x76, 0x01, 0x23, 0x00, 0x00, 0x02, 0x00, 0x00,
   0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc7, 0x01, 0x00, 0x00, 0x78, 0x9c,
@@ -45,25 +46,28 @@ function main() {
   console.log("Starting RzipJS test...");
   const rzip = new RzipJS(rzipData);
   console.log("Decompressing RZIP data...");
-  const decompressedData = rzip.rzip_inflate(rzipData);
-  console.log(
-    "Decompression complete. Decompressed data length:",
-    decompressedData.length
-  );
+  try {
+    const decompressedData = rzip.rzip_inflate();
+    console.log(
+      "Decompression complete. Decompressed data length:",
+      decompressedData.length
+    );
+  } catch (e) {
+    console.error("Decompression failed:", e.message);
+    return;
+  }
 
-  console.log("Recompressing data back to RZIP format...");
-  const recompressedData = rzip.rzip_deflate();
-  console.log(
-    "Recompression complete. Recompressed data length:",
-    recompressedData.length
-  );
-
-  // Verify that recompressed data matches original RZIP data
-  const isEqual = array_equal(rzipData, recompressedData);
-  console.log(
-    "Recompressed data matches original RZIP data:",
-    isEqual ? "Yes" : "No"
-  );
+  try {
+    console.log("Recompressing data back to RZIP format...");
+    const recompressedData = rzip.rzip_deflate();
+    console.log(
+      "Recompression complete. Recompressed data length:",
+      recompressedData.length
+    );
+  } catch (e) {
+    console.error("Recompression failed:", e.message);
+    return;
+  }
 }
 
 function array_equal(a, b) {

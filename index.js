@@ -1,5 +1,6 @@
 import pako from "pako";
 
+// Values for RZIP format from RetroArch's rzip_stream.c
 const RZIP_VERSION = 1;
 const RZIP_COMPRESSION_LEVEL = 6;
 const RZIP_DEFAULT_CHUNK_SIZE = 131072; // 128kb
