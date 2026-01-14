@@ -1,4 +1,5 @@
 import { RzipJS } from "./index.js";
+import crypto from "crypto";
 
 // Sample RZIP compressed data for testing
 const rzipData = Uint8Array.from([
@@ -44,6 +45,13 @@ const rzipData = Uint8Array.from([
 // Example usage of RzipJS class
 function main() {
   console.log("Starting RzipJS test...");
+
+  const start_hash = crypto
+    .createHash("md5")
+    .update(Buffer.from(rzipData))
+    .digest("hex");
+  console.log("MD5 of input RZIP data:", start_hash);
+
   const rzip = new RzipJS(rzipData);
   console.log("Decompressing RZIP data...");
   try {
@@ -64,6 +72,18 @@ function main() {
       "Recompression complete. Recompressed data length:",
       recompressedData.length
     );
+
+    const end_hash = crypto
+      .createHash("md5")
+      .update(Buffer.from(recompressedData))
+      .digest("hex");
+    console.log("MD5 of recompressed RZIP data:", end_hash);
+
+    if (start_hash === end_hash) {
+      console.log("Success: Recompressed data matches original RZIP data.");
+    } else {
+      console.error("Error: Recompressed data does not match original.");
+    }
   } catch (e) {
     console.error("Recompression failed:", e.message);
     return;

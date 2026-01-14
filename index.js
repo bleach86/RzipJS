@@ -54,11 +54,7 @@ class RzipJS {
       (header_bytes[12] |
         (header_bytes[13] << 8) |
         (header_bytes[14] << 16) |
-        (header_bytes[15] << 24) |
-        (header_bytes[16] << 32) |
-        (header_bytes[17] << 40) |
-        (header_bytes[18] << 48) |
-        (header_bytes[19] << 56)) >>>
+        (header_bytes[15] << 24)) >>>
       0;
     if (inflated_size <= 0) {
       throw new Error("Invalid RZIP inflated size");
@@ -143,10 +139,10 @@ class RzipJS {
     header.set(RZIP_MAGIC, 0);
 
     // Chunk size, 4 bytes, little-endian
-    header[8] = this.header.chunk_size & 0xff;
-    header[9] = (this.header.chunk_size >> 8) & 0xff;
-    header[10] = (this.header.chunk_size >> 16) & 0xff;
-    header[11] = (this.header.chunk_size >> 24) & 0xff;
+    header[8] = RZIP_DEFAULT_CHUNK_SIZE & 0xff;
+    header[9] = (RZIP_DEFAULT_CHUNK_SIZE >> 8) & 0xff;
+    header[10] = (RZIP_DEFAULT_CHUNK_SIZE >> 16) & 0xff;
+    header[11] = (RZIP_DEFAULT_CHUNK_SIZE >> 24) & 0xff;
 
     // Inflated size, 8 bytes, little-endian
     const inflated_size = this.rfile.length;
@@ -154,10 +150,10 @@ class RzipJS {
     header[13] = (inflated_size >> 8) & 0xff;
     header[14] = (inflated_size >> 16) & 0xff;
     header[15] = (inflated_size >> 24) & 0xff;
-    header[16] = (inflated_size >> 32) & 0xff;
-    header[17] = (inflated_size >> 40) & 0xff;
-    header[18] = (inflated_size >> 48) & 0xff;
-    header[19] = (inflated_size >> 56) & 0xff;
+    header[16] = 0; // High 32 bits are 0 for JavaScript numbers
+    header[17] = 0;
+    header[18] = 0;
+    header[19] = 0;
 
     rzip_data.push(...header);
 
@@ -166,7 +162,7 @@ class RzipJS {
     while (offset < this.rfile.length) {
       const chunk = this.rfile.slice(
         offset,
-        Math.min(offset + this.header.chunk_size, this.rfile.length)
+        Math.min(offset + RZIP_DEFAULT_CHUNK_SIZE, this.rfile.length)
       );
       offset += chunk.length;
 
@@ -187,6 +183,8 @@ class RzipJS {
 
     this.rfile = Uint8Array.from(rzip_data);
     this.header.is_rzip_compressed = true;
+
+    var end_header = this.read_header(this.rfile);
 
     return this.rfile;
   }
