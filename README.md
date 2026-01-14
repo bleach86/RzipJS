@@ -15,6 +15,7 @@ import { RzipJS } from "RzipJS";
 
 function main() {
   // Create RzipJS instance with Uint8Array data
+  const rzipData = new Uint8Array([...]); // Your RZIP compressed data here
   const rzip = new RzipJS(rzipData);
 
   // Check if data is RZIP compressed
