@@ -1,5 +1,4 @@
 import pako from "pako";
-import fs from "fs";
 
 // Values for RZIP format from RetroArch's rzip_stream.c
 const RZIP_VERSION = 1;
