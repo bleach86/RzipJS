@@ -1,4 +1,5 @@
 import pako from "pako";
+import fs from "fs";
 
 // Values for RZIP format from RetroArch's rzip_stream.c
 const RZIP_VERSION = 1;
@@ -12,7 +13,8 @@ const RZIP_MAGIC = Uint8Array.from([35, 82, 90, 73, 80, 118, RZIP_VERSION, 35]);
 class RzipHeader {
   constructor(inflated_size, chunk_size, is_rzip_compressed) {
     this.chunk_size = chunk_size;
-    this.inflated_size = inflated_size;
+
+    this.inflated_size = BigInt(inflated_size);
     this.is_rzip_compressed = is_rzip_compressed;
   }
 }
@@ -52,7 +54,7 @@ class RzipJS {
       RZIP_MAGIC.length + 4,
       true
     );
-    if (inflated_size <= 0) {
+    if (inflated_size <= 0n) {
       throw new Error("Invalid RZIP inflated size");
     }
 
@@ -70,11 +72,15 @@ class RzipJS {
       return this.rfile;
     }
 
+    if (this.header.inflated_size > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new Error("Inflated size exceeds MAX_SAFE_INTEGER");
+    }
+
     let inflated_data = new Uint8Array(Number(this.header.inflated_size));
     let inflated_offset = 0;
     let rfile_offset = RZIP_HEADER_SIZE;
 
-    while (inflated_offset < this.header.inflated_size) {
+    while (BigInt(inflated_offset) < this.header.inflated_size) {
       if (rfile_offset + RZIP_CHUNK_HEADER_SIZE > this.rfile.length) {
         throw new Error(
           "Unexpected end of RZIP file while reading chunk header"
@@ -108,7 +114,7 @@ class RzipJS {
       inflated_offset += decompressed_chunk.length;
     }
 
-    if (inflated_data.length !== Number(this.header.inflated_size)) {
+    if (BigInt(inflated_data.length) !== this.header.inflated_size) {
       throw new Error(
         "Decompressed size does not match expected inflated size"
       );
@@ -137,9 +143,8 @@ class RzipJS {
     chunk_size.setUint32(0, RZIP_DEFAULT_CHUNK_SIZE, true);
 
     // Inflated size, 8 bytes, little-endian
-    const inflated_size = BigInt(this.rfile.length);
     const inflated_size_view = new DataView(new ArrayBuffer(8));
-    inflated_size_view.setBigUint64(0, inflated_size, true);
+    inflated_size_view.setBigUint64(0, this.header.inflated_size, true);
 
     header.set(new Uint8Array(chunk_size.buffer), RZIP_MAGIC.length);
     header.set(
