@@ -55,11 +55,21 @@ function main() {
   const rzip = new RzipJS(rzipData);
   console.log("Decompressing RZIP data...");
   try {
+    const expected_output_length = Number(rzip.header.inflated_size);
+    console.log("Expected decompressed data length:", expected_output_length);
     const decompressedData = rzip.rzip_inflate();
     console.log(
       "Decompression complete. Decompressed data length:",
       decompressedData.length
     );
+    if (decompressedData.length !== expected_output_length) {
+      console.error(
+        "Error: Decompressed data length does not match expected length."
+      );
+      return;
+    } else {
+      console.log("Decompressed data length matches expected length.");
+    }
   } catch (e) {
     console.error("Decompression failed:", e.message);
     return;
