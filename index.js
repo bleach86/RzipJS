@@ -34,7 +34,7 @@ class RzipJS {
       !array_equal(header_bytes.slice(0, RZIP_MAGIC.length), RZIP_MAGIC)
     ) {
       // Invalid RZIP file, treat as uncompressed
-      return new RzipHeader(thisrfile.length, RZIP_DEFAULT_CHUNK_SIZE, false);
+      return new RzipHeader(this.rfile.length, RZIP_DEFAULT_CHUNK_SIZE, false);
     }
 
     // Read chunk size (4 bytes, little-endian)
