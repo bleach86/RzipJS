@@ -24,7 +24,8 @@ jobs:
   publish-gpr:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'  # Only run on release
+    if: github.event_name == 'release' # Only run on release
+    environment: NPM Publish
     permissions:
       contents: read
       packages: write
