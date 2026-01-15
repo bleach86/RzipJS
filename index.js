@@ -39,11 +39,10 @@ class RzipJS {
 
     // Read chunk size (4 bytes, little-endian)
     const chunk_size =
-      (header_bytes[8] |
-        (header_bytes[9] << 8) |
-        (header_bytes[10] << 16) |
-        (header_bytes[11] << 24)) >>>
-      0;
+      (header_bytes[8] & 0xff) |
+      ((header_bytes[9] & 0xff) << 8) |
+      ((header_bytes[10] & 0xff) << 16) |
+      (((header_bytes[11] & 0xff) << 24) >>> 0);
 
     if (chunk_size <= 0) {
       throw new Error("Invalid RZIP chunk size");
@@ -51,14 +50,14 @@ class RzipJS {
 
     // Read inflated size (8 bytes, little-endian)
     const inflated_size =
-      BigInt(header_bytes[12]) |
-      (BigInt(header_bytes[13]) << 8n) |
-      (BigInt(header_bytes[14]) << 16n) |
-      (BigInt(header_bytes[15]) << 24n) |
-      (BigInt(header_bytes[16]) << 32n) |
-      (BigInt(header_bytes[17]) << 40n) |
-      (BigInt(header_bytes[18]) << 48n) |
-      (BigInt(header_bytes[19]) << 56n);
+      BigInt(header_bytes[12] & 0xff) |
+      (BigInt(header_bytes[13] & 0xff) << 8n) |
+      (BigInt(header_bytes[14] & 0xff) << 16n) |
+      (BigInt(header_bytes[15] & 0xff) << 24n) |
+      (BigInt(header_bytes[16] & 0xff) << 32n) |
+      (BigInt(header_bytes[17] & 0xff) << 40n) |
+      (BigInt(header_bytes[18] & 0xff) << 48n) |
+      (BigInt(header_bytes[19] & 0xff) << 56n);
     if (inflated_size <= 0) {
       throw new Error("Invalid RZIP inflated size");
     }
@@ -95,11 +94,10 @@ class RzipJS {
       rfile_offset += RZIP_CHUNK_HEADER_SIZE;
 
       const compressed_chunk_size =
-        (chunk_header[0] |
-          (chunk_header[1] << 8) |
-          (chunk_header[2] << 16) |
-          (chunk_header[3] << 24)) >>>
-        0;
+        (chunk_header[0] & 0xff) |
+        ((chunk_header[1] & 0xff) << 8) |
+        ((chunk_header[2] & 0xff) << 16) |
+        (((chunk_header[3] & 0xff) << 24) >>> 0);
 
       if (rfile_offset + compressed_chunk_size > this.rfile.length) {
         throw new Error("Unexpected end of RZIP file while reading chunk data");
