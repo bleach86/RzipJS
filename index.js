@@ -38,26 +38,20 @@ class RzipJS {
     }
 
     // Read chunk size (4 bytes, little-endian)
-    const chunk_size =
-      (header_bytes[8] & 0xff) |
-      ((header_bytes[9] & 0xff) << 8) |
-      ((header_bytes[10] & 0xff) << 16) |
-      (((header_bytes[11] & 0xff) << 24) >>> 0);
+    const chunk_size = new DataView(header_bytes.buffer).getUint32(
+      RZIP_MAGIC.length,
+      true
+    );
 
     if (chunk_size <= 0) {
       throw new Error("Invalid RZIP chunk size");
     }
 
     // Read inflated size (8 bytes, little-endian)
-    const inflated_size =
-      BigInt(header_bytes[12] & 0xff) |
-      (BigInt(header_bytes[13] & 0xff) << 8n) |
-      (BigInt(header_bytes[14] & 0xff) << 16n) |
-      (BigInt(header_bytes[15] & 0xff) << 24n) |
-      (BigInt(header_bytes[16] & 0xff) << 32n) |
-      (BigInt(header_bytes[17] & 0xff) << 40n) |
-      (BigInt(header_bytes[18] & 0xff) << 48n) |
-      (BigInt(header_bytes[19] & 0xff) << 56n);
+    const inflated_size = new DataView(header_bytes.buffer).getBigUint64(
+      RZIP_MAGIC.length + 4,
+      true
+    );
     if (inflated_size <= 0) {
       throw new Error("Invalid RZIP inflated size");
     }
@@ -93,11 +87,10 @@ class RzipJS {
       );
       rfile_offset += RZIP_CHUNK_HEADER_SIZE;
 
-      const compressed_chunk_size =
-        (chunk_header[0] & 0xff) |
-        ((chunk_header[1] & 0xff) << 8) |
-        ((chunk_header[2] & 0xff) << 16) |
-        (((chunk_header[3] & 0xff) << 24) >>> 0);
+      const compressed_chunk_size = new DataView(chunk_header.buffer).getUint32(
+        0,
+        true
+      );
 
       if (rfile_offset + compressed_chunk_size > this.rfile.length) {
         throw new Error("Unexpected end of RZIP file while reading chunk data");
@@ -140,22 +133,19 @@ class RzipJS {
     header.set(RZIP_MAGIC, 0);
 
     // Chunk size, 4 bytes, little-endian
-    header[8] = RZIP_DEFAULT_CHUNK_SIZE & 0xff;
-    header[9] = (RZIP_DEFAULT_CHUNK_SIZE >> 8) & 0xff;
-    header[10] = (RZIP_DEFAULT_CHUNK_SIZE >> 16) & 0xff;
-    header[11] = (RZIP_DEFAULT_CHUNK_SIZE >> 24) & 0xff;
+    const chunk_size = new DataView(new ArrayBuffer(4));
+    chunk_size.setUint32(0, RZIP_DEFAULT_CHUNK_SIZE, true);
 
     // Inflated size, 8 bytes, little-endian
     const inflated_size = BigInt(this.rfile.length);
+    const inflated_size_view = new DataView(new ArrayBuffer(8));
+    inflated_size_view.setBigUint64(0, inflated_size, true);
 
-    header[12] = Number((inflated_size >> 0n) & 0xffn);
-    header[13] = Number((inflated_size >> 8n) & 0xffn);
-    header[14] = Number((inflated_size >> 16n) & 0xffn);
-    header[15] = Number((inflated_size >> 24n) & 0xffn);
-    header[16] = Number((inflated_size >> 32n) & 0xffn);
-    header[17] = Number((inflated_size >> 40n) & 0xffn);
-    header[18] = Number((inflated_size >> 48n) & 0xffn);
-    header[19] = Number((inflated_size >> 56n) & 0xffn);
+    header.set(new Uint8Array(chunk_size.buffer), RZIP_MAGIC.length);
+    header.set(
+      new Uint8Array(inflated_size_view.buffer),
+      RZIP_MAGIC.length + 4
+    );
 
     rzip_data.push(...header);
 
