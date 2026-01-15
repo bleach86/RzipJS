@@ -1,5 +1,7 @@
 import { RzipJS } from "./index.js";
 import crypto from "crypto";
+import fs from "fs";
+import buffer from "buffer";
 
 // Sample RZIP compressed data for testing
 const rzipData = Uint8Array.from([
@@ -43,14 +45,11 @@ const rzipData = Uint8Array.from([
 ]);
 
 // Example usage of RzipJS class
-function main() {
+async function main() {
   console.log("Starting RzipJS test...");
 
-  const start_hash = crypto
-    .createHash("md5")
-    .update(Buffer.from(rzipData))
-    .digest("hex");
-  console.log("MD5 of input RZIP data:", start_hash);
+  const start_hash = hash_data_md5(rzipData);
+  console.log("MD5 of original RZIP data:", start_hash);
 
   const rzip = new RzipJS(rzipData);
   console.log("Decompressing RZIP data...");
@@ -83,10 +82,7 @@ function main() {
       recompressedData.length
     );
 
-    const end_hash = crypto
-      .createHash("md5")
-      .update(Buffer.from(recompressedData))
-      .digest("hex");
+    const end_hash = hash_data_md5(recompressedData);
     console.log("MD5 of recompressed RZIP data:", end_hash);
 
     if (start_hash === end_hash) {
@@ -108,6 +104,36 @@ function array_equal(a, b) {
     if (a[i] !== b[i]) return false;
   }
   return true;
+}
+
+async function read_file_to_uint8array(path) {
+  const stream = fs.createReadStream(path);
+  const chunks = [];
+
+  return new Promise((resolve, reject) => {
+    stream.on("data", (chunk) => {
+      chunks.push(chunk);
+    });
+
+    stream.on("end", () => {
+      const bufferData = Buffer.concat(chunks);
+      const uint8ArrayData = new Uint8Array(bufferData);
+      resolve(uint8ArrayData);
+    });
+
+    stream.on("error", (err) => {
+      reject(err);
+    });
+  });
+}
+
+function hash_data_md5(data) {
+  const chunkSize = 1024 * 1024; // 1 MB chunks
+  const hash = crypto.createHash("md5");
+  for (let i = 0; i < data.length; i += chunkSize) {
+    hash.update(data.slice(i, i + chunkSize));
+  }
+  return hash.digest("hex");
 }
 
 main();

@@ -21,7 +21,7 @@ class RzipJS {
   // rfile: Uint8Array
   constructor(rfile) {
     this.pako = pako;
-    this.rfile = Uint8Array.from(rfile);
+    this.rfile = rfile;
     this.header = this.read_header();
   }
 
@@ -126,7 +126,7 @@ class RzipJS {
       return this.rfile;
     }
 
-    let rzip_data = [];
+    let rzip_data = new Uint8Array(this.rfile.length); // Allocate more than enough space
 
     // Write RZIP header
     const header = new Uint8Array(RZIP_HEADER_SIZE);
@@ -147,10 +147,12 @@ class RzipJS {
       RZIP_MAGIC.length + 4
     );
 
-    rzip_data.push(...header);
+    rzip_data.set(header, 0);
 
     // Compress and write chunks
     let offset = 0;
+    let compressed_offset = RZIP_HEADER_SIZE;
+
     while (offset < this.rfile.length) {
       const chunk = this.rfile.slice(
         offset,
@@ -168,11 +170,27 @@ class RzipJS {
 
       chunk_header.set(new Uint8Array(compressed_chunk_size_view.buffer), 0);
 
-      rzip_data.push(...chunk_header);
-      rzip_data.push(...compressed_chunk);
+      const next_data_length = RZIP_CHUNK_HEADER_SIZE + compressed_chunk.length;
+      if (compressed_offset + next_data_length > rzip_data.length) {
+        // Resize rzip_data
+        // Extend by the remaining unprocessed data + next_data_length * 2
+        const new_rzip_data = new Uint8Array(
+          this.rfile.length - compressed_offset + next_data_length * 2
+        );
+        new_rzip_data.set(rzip_data, 0);
+        rzip_data = new_rzip_data;
+      }
+
+      rzip_data.set(chunk_header, compressed_offset);
+      compressed_offset += RZIP_CHUNK_HEADER_SIZE;
+
+      rzip_data.set(compressed_chunk, compressed_offset);
+      compressed_offset += compressed_chunk.length;
     }
 
-    this.rfile = Uint8Array.from(rzip_data);
+    // truncate rzip_data to actual size
+    rzip_data = rzip_data.slice(0, compressed_offset);
+    this.rfile = rzip_data;
     this.header.is_rzip_compressed = true;
 
     var end_header = this.read_header(this.rfile);
