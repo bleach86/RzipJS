@@ -51,11 +51,14 @@ class RzipJS {
 
     // Read inflated size (8 bytes, little-endian)
     const inflated_size =
-      (header_bytes[12] |
-        (header_bytes[13] << 8) |
-        (header_bytes[14] << 16) |
-        (header_bytes[15] << 24)) >>>
-      0;
+      BigInt(header_bytes[12]) |
+      (BigInt(header_bytes[13]) << 8n) |
+      (BigInt(header_bytes[14]) << 16n) |
+      (BigInt(header_bytes[15]) << 24n) |
+      (BigInt(header_bytes[16]) << 32n) |
+      (BigInt(header_bytes[17]) << 40n) |
+      (BigInt(header_bytes[18]) << 48n) |
+      (BigInt(header_bytes[19]) << 56n);
     if (inflated_size <= 0) {
       throw new Error("Invalid RZIP inflated size");
     }
@@ -74,7 +77,7 @@ class RzipJS {
       return this.rfile;
     }
 
-    let inflated_data = new Uint8Array(this.header.inflated_size);
+    let inflated_data = new Uint8Array(Number(this.header.inflated_size));
     let inflated_offset = 0;
     let rfile_offset = RZIP_HEADER_SIZE;
 
@@ -114,7 +117,7 @@ class RzipJS {
       inflated_offset += decompressed_chunk.length;
     }
 
-    if (inflated_data.length !== this.header.inflated_size) {
+    if (inflated_data.length !== Number(this.header.inflated_size)) {
       throw new Error(
         "Decompressed size does not match expected inflated size"
       );
@@ -145,15 +148,16 @@ class RzipJS {
     header[11] = (RZIP_DEFAULT_CHUNK_SIZE >> 24) & 0xff;
 
     // Inflated size, 8 bytes, little-endian
-    const inflated_size = this.rfile.length;
-    header[12] = inflated_size & 0xff;
-    header[13] = (inflated_size >> 8) & 0xff;
-    header[14] = (inflated_size >> 16) & 0xff;
-    header[15] = (inflated_size >> 24) & 0xff;
-    header[16] = 0; // High 32 bits are 0 for JavaScript numbers
-    header[17] = 0;
-    header[18] = 0;
-    header[19] = 0;
+    const inflated_size = BigInt(this.rfile.length);
+
+    header[12] = Number((inflated_size >> 0n) & 0xffn);
+    header[13] = Number((inflated_size >> 8n) & 0xffn);
+    header[14] = Number((inflated_size >> 16n) & 0xffn);
+    header[15] = Number((inflated_size >> 24n) & 0xffn);
+    header[16] = Number((inflated_size >> 32n) & 0xffn);
+    header[17] = Number((inflated_size >> 40n) & 0xffn);
+    header[18] = Number((inflated_size >> 48n) & 0xffn);
+    header[19] = Number((inflated_size >> 56n) & 0xffn);
 
     rzip_data.push(...header);
 
