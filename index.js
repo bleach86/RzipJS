@@ -163,11 +163,10 @@ class RzipJS {
       });
 
       const chunk_header = new Uint8Array(RZIP_CHUNK_HEADER_SIZE);
-      const compressed_chunk_size = compressed_chunk.length;
-      chunk_header[0] = compressed_chunk_size & 0xff;
-      chunk_header[1] = (compressed_chunk_size >> 8) & 0xff;
-      chunk_header[2] = (compressed_chunk_size >> 16) & 0xff;
-      chunk_header[3] = (compressed_chunk_size >> 24) & 0xff;
+      const compressed_chunk_size_view = new DataView(new ArrayBuffer(4));
+      compressed_chunk_size_view.setUint32(0, compressed_chunk.length, true);
+
+      chunk_header.set(new Uint8Array(compressed_chunk_size_view.buffer), 0);
 
       rzip_data.push(...chunk_header);
       rzip_data.push(...compressed_chunk);
