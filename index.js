@@ -193,8 +193,6 @@ class RzipJS {
     this.rfile = rzip_data;
     this.header.is_rzip_compressed = true;
 
-    var end_header = this.read_header(this.rfile);
-
     return this.rfile;
   }
 }
