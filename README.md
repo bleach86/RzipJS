@@ -11,7 +11,7 @@ npm install github:bleach86/RzipJS
 ## Usage
 
 ```javascript
-import { RzipJS } from "RzipJS";
+import { RzipJS } from "rzipjs";
 
 function main() {
   // Create RzipJS instance with Uint8Array data
