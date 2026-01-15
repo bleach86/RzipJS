@@ -22,19 +22,19 @@ class RzipJS {
   constructor(rfile) {
     this.pako = pako;
     this.rfile = Uint8Array.from(rfile);
-    this.header = this.read_header(this.rfile);
+    this.header = this.read_header();
   }
 
   // Reads the RZIP header from the given rfile Uint8Array
-  read_header(rfile) {
-    const header_bytes = rfile.slice(0, 20);
+  read_header() {
+    const header_bytes = this.rfile.slice(0, RZIP_HEADER_SIZE);
 
     if (
-      header_bytes.length < RZIP_HEADER_SIZE ||
+      this.rfile.length < RZIP_HEADER_SIZE ||
       !array_equal(header_bytes.slice(0, RZIP_MAGIC.length), RZIP_MAGIC)
     ) {
       // Invalid RZIP file, treat as uncompressed
-      return new RzipHeader(rfile.length, RZIP_DEFAULT_CHUNK_SIZE, false);
+      return new RzipHeader(thisrfile.length, RZIP_DEFAULT_CHUNK_SIZE, false);
     }
 
     // Read chunk size (4 bytes, little-endian)
