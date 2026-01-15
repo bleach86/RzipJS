@@ -1,7 +1,6 @@
 import { RzipJS } from "./index.js";
 import crypto from "crypto";
 import fs from "fs";
-import buffer from "buffer";
 
 // Sample RZIP compressed data for testing
 const rzipData = Uint8Array.from([
