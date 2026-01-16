@@ -5,7 +5,7 @@ A JavaScript implementation of RetroArch's RZIP compression algorithm.
 ## Installation
 
 ```bash
-npm install github:bleach86/RzipJS
+npm install rzipjs
 ```
 
 ## Usage
